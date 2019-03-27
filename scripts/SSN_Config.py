@@ -30,7 +30,7 @@ class SSN_ADF_Config:
     # Skips processing observer data making the process much faster
     # However, if a plot that should have been made previously is missing it will not be made when this flag is enabled
     # More dangerous than SKIP_PRESENT_PLOTS, but good when confident that existing observers were completely processed
-    SKIP_OBSERVERS_WITH_PLOTS = True
+    SKIP_OBSERVERS_WITH_PLOTS = False
 
     # Plotting config variables
     PLOT_OPTIMAL_THRESH = True
@@ -44,7 +44,7 @@ class SSN_ADF_Config:
     PLOT_MULTI_THRESH_SCATTER = True
 
     # Suppress numpy warnings for cleaner console output
-    SUPPRESS_NP_WARNINGS = False
+    SUPPRESS_NP_WARNINGS = True
 
     @staticmethod
     def get_file_prepend(adf_type, month_type):

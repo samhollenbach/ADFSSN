@@ -3,6 +3,8 @@ import os
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow.contrib.eager as tfe
+import math
+import csv
 
 tf.enable_eager_execution()
 
@@ -14,24 +16,27 @@ print("Eager execution: {}".format(tf.executing_eagerly()))
 # train_dataset_fp = tf.keras.utils.get_file(fname=os.path.basename(train_dataset_file),
 #                                           origin=train_dataset_file)
 
-train_dataset_fp = 'observer_categories_new.csv'
+train_dataset_fp = 'output/observer_categories.csv'
 
 print("Local copy of the dataset file: {}".format(train_dataset_fp))
 
 # Number of total fields after label
-n = 8
-f = 4
+n_features = 15
+f_ind = 3
 lab_ind = 1
 
 
 def parse_csv(line):
 
-    example_defaults = [[0], [0]] + [[0.] for _ in range(n)]  # sets field types
+
+    example_defaults = [[0], [0], [0.]] + [[0.] for _ in range(n_features)]  # sets field types
+    #example_defaults = [[0], [0], [0.]] + [[0] for _ in range(4)] + [[0.], [0.]] + [[0] for _ in range(9)]
+
     print(example_defaults)
-    parsed_line = tf.decode_csv(line, example_defaults, field_delim=' ')
-    # First 4 fields are features, combine into single tensor
-    features = tf.reshape(parsed_line[lab_ind + 1:lab_ind + 1 + f], shape=(f,))
-    # Last field is the label
+    parsed_line = tf.decode_csv(line, example_defaults, field_delim=',')
+    # Last n fields are features, combine into single tensor
+    features = tf.reshape(parsed_line[f_ind: f_ind + n_features], shape=(n_features,))
+    # Field lab_ind field is the label
     label = tf.reshape(parsed_line[lab_ind], shape=())
     return features, label
 
@@ -48,9 +53,9 @@ print("example features:", features[0])
 print("example label:", label[0])
 
 model = tf.keras.Sequential([
-    tf.keras.layers.Dense(10, activation="relu", input_shape=(f,)),  # input shape required
-    tf.keras.layers.Dense(10, activation="relu"),
-    tf.keras.layers.Dense(4)
+    tf.keras.layers.Dense(8, activation="relu", input_shape=(n_features,)),  # input shape required
+    tf.keras.layers.Dense(8, activation="relu"),
+    tf.keras.layers.Dense(3)
 ])
 
 

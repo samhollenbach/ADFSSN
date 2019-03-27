@@ -6,6 +6,8 @@ import SSN_ADF_Plotter
 import argparse
 from multiprocessing import Pool
 import os
+import gc
+
 
 parser = argparse.ArgumentParser(description="Specify arguments for SSN/ADF config")
 parser.add_argument('-Q', "--QDF", help="Run using QDF calculation", action='store_true')
@@ -27,15 +29,16 @@ args, leftovers = parser.parse_known_args()
 #################
 
 # Observer ID range and who to skip
-SSN_ADF_Config.OBS_START_ID = 476
+SSN_ADF_Config.OBS_START_ID = 580
 SSN_ADF_Config.OBS_END_ID = 600
-SSN_ADF_Config.SKIP_OBS = [332]
+SSN_ADF_Config.SKIP_OBS = [356, 417, 423, 424, 531, 576, 579]  # FOR AM
+# SSN_ADF_Config.SKIP_OBS = [332, 471, 574, 579]  # FOR AO
 
 # Quantity to use in the numerator of the ADF:  Active days "ADF" or 1-quiet days "QDF"
 SSN_ADF_Config.ADF_TYPE = "QDF"
 
 # Quantity to use in the denominator:  Observed days "OBS" or the full month "FULLM"
-SSN_ADF_Config.MONTH_TYPE = "FULLM"
+SSN_ADF_Config.MONTH_TYPE = "OBS"
 
 # Flag to turn on saving of figures
 plotSwitch = True
@@ -47,9 +50,9 @@ output_path = 'Run-2018-6-8'
 output_csv_file = 'output/{}/{}Observer_ADF.csv'.format(output_path, SSN_ADF_Config.get_file_prepend(
     SSN_ADF_Config.ADF_TYPE, SSN_ADF_Config.MONTH_TYPE))
 
-###################
-# PARSING ARGUMENTS#
-###################
+#####################
+# PARSING ARGUMENTS #
+#####################
 # Arguments will over-ride the options set above
 
 # Quantity to use in the numerator of the ADF:  Active days or 1-quiet days
@@ -89,9 +92,9 @@ if args.suppress_warnings:
 if SSN_ADF_Config.SUPPRESS_NP_WARNINGS:
     np.warnings.filterwarnings('ignore')
 
-#################
-# STARTING SCRIPT#
-#################
+###################
+# STARTING SCRIPT #
+###################
 
 print(
     "Starting script with ADF calculation flags: {} / {}\n".format(SSN_ADF_Config.ADF_TYPE, SSN_ADF_Config.MONTH_TYPE))
@@ -144,6 +147,12 @@ header = ['Observer',
           'InvMoStreak',
           'ObsStartDate',
           'ObsTotLength']
+
+
+if not os.path.isfile(output_csv_file):
+    with open(output_csv_file, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
 
 
 # Start pipeline for an individual observer
@@ -251,6 +260,8 @@ def run_obs(CalObsID):
             writer = csv.writer(f)
             writer.writerow(y_row)
 
+    gc.collect()
+
 
 if __name__ == '__main__':
 
@@ -271,7 +282,9 @@ if __name__ == '__main__':
                             break
         print("\nSkipping observers who have plot(s) labeled with the current flags ({} / {}):\n{}\n"
               "Change the SKIP_OBSERVERS_WITH_PLOTS config flag to remove this behavior\n".format(
-            SSN_ADF_Config.ADF_TYPE, SSN_ADF_Config.MONTH_TYPE, SSN_ADF_Config.SKIP_OBS))
+              SSN_ADF_Config.ADF_TYPE, SSN_ADF_Config.MONTH_TYPE, SSN_ADF_Config.SKIP_OBS))
+
+    obs_range = [x for x in obs_range if x not in SSN_ADF_Config.SKIP_OBS]
 
     if SSN_ADF_Config.PROCESSES == 1:
         for i in obs_range:
